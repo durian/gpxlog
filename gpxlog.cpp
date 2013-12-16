@@ -73,7 +73,7 @@ char timeoutstr[32];
 /* XML header */
 std::string version = "1.0";
 char xml1[] = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>";
-char xml2[] = "<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" creator=\"\" version=\"1.1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd\">";
+char xml2[] = "<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" creator=\"GPXLog for XPlane\" version=\"1.1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd\">";
 char xml3[] = "<trk>";
 char xml4[] = "<trkseg>";
 
@@ -87,6 +87,8 @@ double prev_alt = -1;
 double prev_hdg = -1;
 int    prev_psd = -1;
 int    prev_spd = -1;
+
+double t_dist = 0.0;
 
 XPLMMenuID	myMenu;
 int		mySubMenuItem;
@@ -272,13 +274,15 @@ float MyFlightLoopCallback( float inElapsedSinceLastCall,
       if ( do_log > 0 ) {
 	plugin_t = gmtime(&t);
 	strftime(timeoutstr, 32, "%Y-%m-%dT%H:%M:%SZ", plugin_t);
-	
+	t_dist += dfp;
+
 	// maybe a format option (WordTraffic, GPX, etc)
 	fprintf( gOutputFile, "<trkpt lat=\"%f\" lon=\"%f\">\n", lat, lon );
 	fprintf( gOutputFile, "<time>%s</time>\n", timeoutstr );
 	fprintf( gOutputFile, "<ele>%.1f</ele>\n", alt );
 	fprintf( gOutputFile, "<hdg>%.1f</hdg>\n", hdg ); /* non standard gpx field */
 	fprintf( gOutputFile, "<dfp>%.1f</dfp>\n", dfp ); /* distance from previous */
+	fprintf( gOutputFile, "<tsd>%.1f</tsd>\n", t_dist ); /* total segment distance */
 	fprintf( gOutputFile, "</trkpt>\n");
 	fflush(gOutputFile); //maybe a config item
 	prev_lat = lat;
@@ -318,12 +322,14 @@ void gpxlog_stop() {
     if ( psd == 0 ) {
       t += spd;
       plugin_t = gmtime(&t);
+      t_dist += dfp;
       strftime(timeoutstr, 32, "%Y-%m-%dT%H:%M:%SZ", plugin_t);
       fprintf( gOutputFile, "<trkpt lat=\"%f\" lon=\"%f\">\n", lat, lon );
       fprintf( gOutputFile, "<time>%s</time>\n", timeoutstr );
       fprintf( gOutputFile, "<ele>%.1f</ele>\n", alt );
       fprintf( gOutputFile, "<hdg>%.1f</hdg>\n", hdg ); /* non standard gpx field */
       fprintf( gOutputFile, "<dfp>%.1f</dfp>\n", dfp ); /* distance from previous */
+      fprintf( gOutputFile, "<tsd>%.1f</tsd>\n", t_dist ); /* total segment distance */
       fprintf( gOutputFile, "</trkpt>\n");
     }
     fprintf( gOutputFile, "</trkseg></trk></gpx>\n" );
