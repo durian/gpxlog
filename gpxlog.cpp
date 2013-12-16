@@ -249,7 +249,7 @@ float MyFlightLoopCallback( float inElapsedSinceLastCall,
       if ( (prev_lat < 999) && (prev_lon < 999) ) {
 	// check hdg first, if change, log, than change 
 
-	if ( fabs(hdg - prev_hdg) > 2.0 ) {
+	if ( fabs(hdg - prev_hdg) > 4.0 ) {
 	  // If we turn, we log
 	  do_log = 1;
 	}
@@ -259,11 +259,11 @@ float MyFlightLoopCallback( float inElapsedSinceLastCall,
 	  gpxlog_stop();
 	  gpxlog_start();
 	}
-	if ( dfp > 1000.0 ) {
-	  // if we don't turn, but move more than 1000 m, we log
+	if ( dfp > 2000.0 ) {
+	  // if we don't turn, but move more than 2000 m, we log
 	  do_log = 1;
 	}
-	if ( fabs(alt - prev_alt) > 100.0 ) {
+	if ( fabs(alt - prev_alt) > 200.0 ) {
 	  // log fast ascend/descend as well, for 3D plots
 	  do_log = 1;
 	}
@@ -345,6 +345,7 @@ void gpxlog_stop() {
   prev_hdg = -1;
   prev_psd = -1;
   prev_spd = -1;
+  t_dist = 0.0;
 }
 
 void gpxlog_start() {
