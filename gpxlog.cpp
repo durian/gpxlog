@@ -47,7 +47,6 @@ static double distanceto(double lat0, double lon0, double lat1, double lon1) {
 }
 
 
-
 #if APL && __MACH__
 int ConvertPath(const char * inPath, char * outPath, int outPathMaxLen);
 #endif
@@ -78,8 +77,9 @@ char xml2[] = "<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" creator=\"\" ver
 char xml3[] = "<trk>";
 char xml4[] = "<trkseg>";
 
-char filebase[255];
-int  result = 0;
+char  filebase[255];
+const char* sepchar = XPLMGetDirectorySeparator();
+int   result = 0;
 
 double prev_lat = 1000;
 double prev_lon = 1000;
@@ -96,7 +96,7 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc) {
   strcpy(outSig,  "durian.gpxlog");
   strcpy(outDesc, "A plugin that outputs a GPX log.");
 
-  //std::cerr << "Uhm" << std::cerr;
+  XPLMDebugString( "Starting gpxlog.\n" );
 
   /* Locate the X-System directory. */
   XPLMGetSystemPath(filebase);
@@ -151,8 +151,11 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc) {
   gOutputFile = NULL;
   gGPXStatus  = GPXLOG_OFF;
 
+  //this seems backwards, check
   XPLMEnableMenuItem(myMenu, GPXLOG_OFF, 1);
   XPLMEnableMenuItem(myMenu, GPXLOG_ON, 0);
+
+  XPLMDebugString( "Initialised gpxlog.\n" );
 
   return 1;
 }
