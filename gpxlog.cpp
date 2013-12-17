@@ -321,6 +321,8 @@ void gpxlog_stop() {
     return;
   }
 
+  XPLMDebugString( "gpxlog_stop() called.\n" );
+
   XPLMEnableMenuItem(myMenu, GPXLOG_OFF, 1);
   XPLMEnableMenuItem(myMenu, GPXLOG_ON, 0);
 
@@ -370,6 +372,8 @@ void gpxlog_start() {
   if ( gGPXStatus == GPXLOG_ON ) {
     return;
   }
+
+  XPLMDebugString( "gpxlog_start() called.\n" );
 
   XPLMEnableMenuItem(myMenu, GPXLOG_OFF, 0);
   XPLMEnableMenuItem(myMenu, GPXLOG_ON, 1);
