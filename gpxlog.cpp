@@ -38,6 +38,12 @@
 
 #define ERAD 6378145.f /* radius of alien planet "earth" */
 
+std::string to_str(long i) {
+  std::ostringstream ostr;
+  ostr << i;
+  return ostr.str();
+}
+
 /* distance between points */
 static double distanceto(double lat0, double lon0, double lat1, double lon1) {
   double slat = sinf((lat1-lat0) * (double)(M_PI/360));
@@ -85,6 +91,7 @@ double prev_lat = 1000;
 double prev_lon = 1000;
 double prev_alt = -1;
 double prev_hdg = -1;
+double prev_gsp = -1;
 int    prev_psd = -1;
 int    prev_spd = -1;
 
@@ -110,6 +117,7 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc) {
   gPlaneAlt     = XPLMFindDataRef("sim/flightmodel/position/elevation"); // y_agl ?
   gPlaneHeading = XPLMFindDataRef("sim/flightmodel/position/hpath");
   gPlaneIAS     = XPLMFindDataRef("sim/flightmodel/position/indicated_airspeed");//groundspeed ?
+  gPlaneGSP     = XPLMFindDataRef("sim/flightmodel/position/groundspeed");
   gPlaneTAS     = XPLMFindDataRef("sim/flightmodel/position/true_airspeed");
   gSimPaused    = XPLMFindDataRef("sim/time/paused");
   gSimSpeed     = XPLMFindDataRef("sim/time/sim_speed");
@@ -187,20 +195,22 @@ PLUGIN_API void XPluginReceiveMessage(
   (void)inFromWho;
   (void)inParam;
 
-  std::cerr << "XPluginReceiveMessage " << inMessage << std::endl;
+  std::string s = "XPluginReceiveMessage "+to_str(inMessage)+"\n";
+  XPLMDebugString( s.c_str() );
 
   if ( inMessage == XPLM_MSG_PLANE_LOADED ) {
     if( gGPXStatus == GPXLOG_ON ) {
+      // start a new track when changing plane
       gpxlog_stop();
       gpxlog_start();
     }
   }
-  /*if (inMessage == XPLM_MSG_AIRPORT_LOADED) {
+  if (inMessage == XPLM_MSG_PLANE_CRASHED) { //101
     if( gGPXStatus == GPXLOG_ON ) {
       gpxlog_stop();
       gpxlog_start();
     }
-    }*/
+    }
   //chngelver, 108
 }
 
@@ -234,21 +244,27 @@ float MyFlightLoopCallback( float inElapsedSinceLastCall,
     double lon = XPLMGetDataf(gPlaneLon);
     double alt = XPLMGetDataf(gPlaneAlt); // is already meters?
     double hdg = XPLMGetDataf(gPlaneHeading);
+    double gsp = XPLMGetDataf(gPlaneGSP);
     int    psd = XPLMGetDatai(gSimPaused);
     int    spd = XPLMGetDatai(gSimSpeed);
     
     double dfp = 0.0; //distance from previous
-    /*  Write GPX trkpt */
+
+    // save psd, new segment if starting after pause again?
+
+    /*  Write GPX trkpt, if not paused */
     if ( (psd == 0) && gOutputFile ) {
       t += spd;
+
       // check if we want to log (distance, time, heading)
       // First check if turning
       //
       int do_log = 0;
+      //int do_segment = 0; // new segment, track
 
       if ( (prev_lat < 999) && (prev_lon < 999) ) {
-	// check hdg first, if change, log, than change 
 
+	// check hdg first, if change, log, than change 
 	if ( fabs(hdg - prev_hdg) > 4.0 ) {
 	  // If we turn, we log
 	  do_log = 1;
@@ -289,7 +305,8 @@ float MyFlightLoopCallback( float inElapsedSinceLastCall,
 	prev_lon = lon;
 	prev_alt = alt;
 	prev_hdg = hdg;
-	prev_spd = spd;
+	prev_gsp = gsp;
+	
       }
     }
   }
@@ -318,6 +335,7 @@ void gpxlog_stop() {
     double dfp = 0.0;
     if ( (prev_lat < 999) && (prev_lon < 999) ) {
       dfp = distanceto(prev_lat, prev_lon, lat, lon); //abs?
+      // large distance here could mean crash and back at airport...
     }
     if ( psd == 0 ) {
       t += spd;

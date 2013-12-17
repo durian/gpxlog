@@ -128,6 +128,9 @@ XPLMDataRef gPlaneHeading;
 /* X-Plane Dataref: sim/flightmodel/position/indicated_airspeed */
 XPLMDataRef gPlaneIAS;
 
+/* X-Plane Dataref: sim/flightmodel/position/groundspeed */
+XPLMDataRef gPlaneGSP;
+
 /* X-Plane Dataref: sim/flightmodel/position/true_airspeed */
 XPLMDataRef gPlaneTAS;
 
