@@ -26,7 +26,7 @@ class Info {
   double                  newtrack_dfp; // not useful?
   double                  delta_alt;
   int                     format;
-
+  
   std::string             outfilename;
   std::string             prefsfilename;
     

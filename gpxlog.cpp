@@ -60,12 +60,7 @@ time_t t;            // Time
 struct tm *plugin_t; // time in xplane
 char timeoutstr[32];
 
-/* XML header */
 std::string version = "1.0";
-char xml1[] = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>";
-char xml2[] = "<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" creator=\"GPXLog for XPlane\" version=\"1.1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd\">";
-char xml3[] = "<trk>";
-char xml4[] = "<trkseg>";
 
 char  filebase[255];
 int   result = 0;
@@ -396,6 +391,8 @@ void gpxlog_start() {
     XPLMDebugString("TimedProccessing - Unable to convert path\n");
 #endif
 
+  info->open_outfile( gOutputPath );
+  /*
   gOutputFile = fopen( gOutputPath, "w+" );
   
   if ( gOutputFile ) {
@@ -404,6 +401,7 @@ void gpxlog_start() {
     XPLMDebugString( gOutputPath );
     XPLMDebugString( "\n" );
   }
+  */
 }
 
 #if APL && __MACH__

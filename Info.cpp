@@ -92,6 +92,10 @@ void Info::open_outfile( const std::string& fn ) {
   os = new std::ofstream( fn.c_str(), std::ios::out );
   if ( format == 1 ) {
     // write XML header
+    write_outfile("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>");
+    write_outfile("<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" creator=\"GPXLog for XPlane\" version=\"1.1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd\">");
+    write_outfile("<trk>");
+    write_outfile("<trkseg>");
   }
 }
 void Info::write_outfile( const std::string& l ) {
@@ -104,3 +108,4 @@ void Info::close_outfile() {
     os->close();
   }
 }
+
