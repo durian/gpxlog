@@ -2,7 +2,10 @@
 #define _INFO_H
 
 #include <string>
-#include <map>
+#include <iostream>
+#include <iomanip>
+#include <sstream>
+#include <fstream>
 
 // ----------------------------------------------------------------------------
 // Class
@@ -13,7 +16,6 @@ std::string trim(const std::string&, const std::string&);
 class Info {
  private:
   int                     status;
-  std::map<std::string, std::string> kv; 
 
  public:
   int                     start_immediately;
@@ -21,7 +23,11 @@ class Info {
   double                  delta_dfp;
   double                  newtrack_dfp; // not useful?
   double                  delta_alt;
+  int                     format;
 
+  std::string             outfilename;
+  std::string             prefsfilename;
+    
   // Constructor.
   Info();
 
@@ -30,10 +36,7 @@ class Info {
 
   int  get_status() { return status; }
   void set_status(int s) { status = s; }
-  void read_file( const std::string& );
-  void add_kv( const std::string&, const std::string& );
-  const std::string& get_value( const std::string& );
-  const std::string& get_value( const std::string&, const std::string& );
+  void read_prefs( const std::string& );
 };
 
 #endif

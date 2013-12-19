@@ -31,20 +31,21 @@ std::string trim(const std::string &t, const std::string &ws) {
 Info::Info() {
   status = 1;
   start_immediately = 0;
-  delta_hdg    =    4.0;
-  delta_dfp    = 2000.0;
-  newtrack_dfp = 5000.0; 
-  delta_alt    =  200.0;
+  delta_hdg    =      4.0;
+  delta_dfp    =   2000.0;
+  newtrack_dfp =   5000.0; 
+  delta_alt    =    200.0;
+  format       =      1;
 }
 
 Info::~Info() {
 }
 
-void Info::read_file( const std::string& filename ) {
+void Info::read_prefs( const std::string& filename ) {
   std::ifstream file( filename.c_str() );
   if ( ! file ) {
     //std::cerr << "ERROR: cannot load file." << std::endl;
-    set_status(-1);
+    status = -1; //set_status(-1);
     return;
   }
 

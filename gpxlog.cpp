@@ -51,7 +51,7 @@ char outputPath2[255];
 int Result = 0;
 #endif
 
-Info* info = new Info(); // config settings, TODO: read from file
+Info* info = new Info(); // config settings, TODO: read from file. Globals here
 
 FILE *gOutputFile; // Global gpx file 
 char gOutputPath[255]; // Global System path to gpx file 
@@ -98,7 +98,7 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc) {
   std::string sep = std::string(XPLMGetDirectorySeparator());
   std::string prefsfile = std::string(filebase) + "Resources" + sep + "plugins" + sep + "gpxlog.ini";
 
-  info->read_file( prefsfile );
+  info->read_prefs( prefsfile );
   if ( info->get_status() == -1 ) {
     XPLMDebugString( "Could not read prefs file.\n" );
     XPLMDebugString( prefsfile.c_str() );
