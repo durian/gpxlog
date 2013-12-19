@@ -7,6 +7,8 @@
 
 #include <stdlib.h>
 
+#include "XPLMUtilities.h"
+
 #include "Info.h"
 
 // ----------------------------------------------------------------------------
@@ -25,6 +27,7 @@ std::string trim(const std::string &t, const std::string &ws) {
   return res;
 }
 
+// Default values if no config file found.
 Info::Info() {
   status = 1;
   start_immediately = 0;
@@ -59,6 +62,8 @@ void Info::read_file( const std::string& filename ) {
       std::string lhs = trim(a_line.substr( 0, pos ), " \t\r\n");
       std::string rhs = trim(a_line.substr( pos+1 ), " \t\r\n");
       if ( (lhs != "") && (rhs != "") ) {
+	std::string tmp = lhs +":"+rhs+"\n";
+	XPLMDebugString( tmp.c_str() );
 	if ( lhs == "start_immediately" ) {
 	  if ( rhs == "1" ) {
 	    start_immediately = 1;
