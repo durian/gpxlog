@@ -56,6 +56,6 @@ macx {
 
 #LIBS += -lalut -lopenal
 
-SOURCES += gpxlog.cpp
+SOURCES += gpxlog.cpp Info.cpp
 
-HEADERS += gpxlog.h
+HEADERS += gpxlog.h Info.h

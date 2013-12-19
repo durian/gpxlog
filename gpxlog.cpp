@@ -29,6 +29,7 @@
 #include "XPLMMenus.h"
 
 #include "gpxlog.h"
+#include "Info.h"
 
 std::string to_str(long i) {
   std::ostringstream ostr;
@@ -50,6 +51,7 @@ char outputPath2[255];
 int Result = 0;
 #endif
 
+Info* info = new Info(); // config settings, TODO: read from file
 
 FILE *gOutputFile; // Global gpx file 
 char gOutputPath[255]; // Global System path to gpx file 
@@ -66,7 +68,6 @@ char xml3[] = "<trk>";
 char xml4[] = "<trkseg>";
 
 char  filebase[255];
-const char* sepchar = XPLMGetDirectorySeparator();
 int   result = 0;
 
 // "Previous" logged point
@@ -89,9 +90,22 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc) {
   strcpy(outDesc, "A plugin that outputs a GPX log.");
 
   XPLMDebugString( "Starting gpxlog.\n" );
-
   
   XPLMGetSystemPath(filebase); // Locate the X-System directory
+  XPLMDebugString( filebase );
+  XPLMDebugString( "\n" );
+
+  std::string sep = std::string(XPLMGetDirectorySeparator());
+  std::string prefsfile = std::string(filebase) + "Resources" + sep + "plugins" + sep + "gpxlog.ini";
+
+  info->read_file( prefsfile );
+  if ( info->get_status() == -1 ) {
+    XPLMDebugString( "Could not read prefs file.\n" );
+    XPLMDebugString( prefsfile.c_str() );
+    XPLMDebugString( "\n" );
+  } else {
+    XPLMDebugString( "Read prefs file.\n" );
+  }
 
   // Data refs.
   gZuluTime     = XPLMFindDataRef("sim/time/zulu_time_sec");
@@ -118,14 +132,14 @@ SDK210TestsMenuItem = XPLMAppendMenuItem(XPLMFindPluginsMenu(), "SDK210Tests", N
 SDK210TestsMenuId = XPLMCreateMenu("SDK210Tests", XPLMFindPluginsMenu(), SDK210TestsMenuItem, SDK210TestsMenuHandler, NULL);
 SDK210TestsMenuItem2 = XPLMAppendMenuItem(SDK210TestsMenuId, "SDK210Tests", (void *)"SDK210Tests", 1)
   */
-  // First we put a new menu item into the plugin menu.
+  // First we put a new menu item into the plugin menu
   mySubMenuItem = XPLMAppendMenuItem(
 				     XPLMFindPluginsMenu(), // Plugins menu 
 				     "GPX Log", // Menu title
 				     0, // Item ref
 				     1); // English 
 
-  // Now create a submenu attached to our menu items.
+  // Now create a submenu attached to our menu items
   myMenu = XPLMCreateMenu(
 			  "GPX Log",
 			  XPLMFindPluginsMenu(),
@@ -133,7 +147,7 @@ SDK210TestsMenuItem2 = XPLMAppendMenuItem(SDK210TestsMenuId, "SDK210Tests", (voi
 			  MyMenuHandlerCallback,/* The handler */
 			  0);			/* Handler Ref */
 
-  // Append menu items to our submenu.
+  // Append menu items Off and ON to our submenu
   XPLMAppendMenuItem( myMenu,
 		      "Log - OFF",
 		      (void*)GPXLOG_OFF,
@@ -143,13 +157,17 @@ SDK210TestsMenuItem2 = XPLMAppendMenuItem(SDK210TestsMenuId, "SDK210Tests", (voi
 		      (void*)GPXLOG_ON,
 		      1);
 
-  /* Init */
+  // Init (read config file with params?)
   gOutputFile = NULL;
-  gGPXStatus  = GPXLOG_OFF;
-
-  XPLMEnableMenuItem(myMenu, GPXLOG_OFF, 0);
-  XPLMEnableMenuItem(myMenu, GPXLOG_ON, 1);
-
+  if ( info->start_immediately == 0 ) {
+    gGPXStatus  = GPXLOG_OFF; // start OFF
+    XPLMEnableMenuItem(myMenu, GPXLOG_OFF, 0);
+    XPLMEnableMenuItem(myMenu, GPXLOG_ON, 1);
+  } else {
+    gGPXStatus  = GPXLOG_ON; // start ON
+    XPLMEnableMenuItem(myMenu, GPXLOG_OFF, 1);
+    XPLMEnableMenuItem(myMenu, GPXLOG_ON, 0);
+  }
   XPLMDebugString( "Initialised gpxlog.\n" );
 
   return 1;
@@ -237,7 +255,7 @@ float MyFlightLoopCallback( float inElapsedSinceLastCall,
 
     // save psd, new segment if starting after pause again?
 
-    /*  Write GPX trkpt, if not paused */
+    //  Write GPX trkpt, if not paused
     if ( (psd == 0) && gOutputFile ) {
       t += spd;
 
@@ -250,21 +268,21 @@ float MyFlightLoopCallback( float inElapsedSinceLastCall,
       if ( (prev_lat < 999) && (prev_lon < 999) ) {
 
 	// check hdg first, if change, log, than change 
-	if ( fabs(hdg - prev_hdg) > 4.0 ) {
+	if ( fabs(hdg - prev_hdg) > info->delta_hdg ) {
 	  // If we turn, we log
 	  do_log = 1;
 	}
-	dfp = distanceto(prev_lat, prev_lon, lat, lon); //abs?
-	if ( dfp > 5000.0 ) {
+	dfp = distanceto(prev_lat, prev_lon, lat, lon);
+	if ( dfp > info->newtrack_dfp ) {
 	  do_log = 1;
 	  gpxlog_stop();
 	  gpxlog_start();
 	}
-	if ( dfp > 2000.0 ) {
+	if ( dfp > info->delta_dfp ) {
 	  // if we don't turn, but move more than 2000 m, we log
 	  do_log = 1;
 	}
-	if ( fabs(alt - prev_alt) > 200.0 ) {
+	if ( fabs(alt - prev_alt) > info->delta_alt ) {
 	  // log fast ascend/descend as well, for 3D plots
 	  do_log = 1;
 	}
@@ -272,6 +290,7 @@ float MyFlightLoopCallback( float inElapsedSinceLastCall,
       } else { //999
 	do_log = 1; // log if first one
       }
+
       if ( do_log > 0 ) {
 	plugin_t = gmtime(&t);
 	strftime(timeoutstr, 32, "%Y-%m-%dT%H:%M:%SZ", plugin_t);
@@ -346,11 +365,11 @@ void gpxlog_stop() {
   gGPXStatus = GPXLOG_OFF;
   prev_lat = 1000;
   prev_lon = 1000;
-  prev_alt = -1;
-  prev_hdg = -1;
-  prev_psd = -1;
-  prev_spd = -1;
-  t_dist = 0.0;
+  prev_alt =   -1;
+  prev_hdg =   -1;
+  prev_psd =   -1;
+  prev_spd =   -1;
+  t_dist   =    0.0;
 }
 
 void gpxlog_start() {

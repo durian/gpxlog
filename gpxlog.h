@@ -12,16 +12,16 @@
 #include "XPLMDataAccess.h"
 #include "XPLMMenus.h"
 
-/* Number of seconds to delay before writing next entry */
+// Number of seconds to delay before checking position
 static const float GPXLOG_INTERVAL = 1.0;
 
-/* Status of flight recorder. OFF or ON */
+// Status of logging. OFF or ON
 enum gpxlog_status {GPXLOG_OFF, GPXLOG_ON};
 
-/* Data type for compatibility with GPXLOG.DLL. */
+// Data type for compatibility with GPXLOG.DLL.
 typedef uint32_t DWORD;
 
-/* Data type for compatibility with GPXLOG.DLL. */
+// Data type for compatibility with GPXLOG.DLL.
 typedef uint16_t WORD;
 
 
