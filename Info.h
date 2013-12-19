@@ -16,6 +16,8 @@ std::string trim(const std::string&, const std::string&);
 class Info {
  private:
   int                     status;
+  std::ofstream          *os;
+  bool                    oo;
 
  public:
   int                     start_immediately;
@@ -29,7 +31,7 @@ class Info {
   std::string             prefsfilename;
     
   // Constructor.
-  Info();
+ Info();
 
   // Destructor.
   ~Info();
@@ -37,6 +39,7 @@ class Info {
   int  get_status() { return status; }
   void set_status(int s) { status = s; }
   void read_prefs( const std::string& );
+  void open_outfile( const std::string& fn );
 };
 
 #endif

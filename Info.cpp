@@ -30,6 +30,9 @@ std::string trim(const std::string &t, const std::string &ws) {
 // Default values if no config file found.
 Info::Info() {
   status = 1;
+  os     = NULL; // output stream
+  oo     = false; // output is open
+
   start_immediately = 0;
   delta_hdg    =      4.0;
   delta_dfp    =   2000.0;
@@ -85,3 +88,9 @@ void Info::read_prefs( const std::string& filename ) {
   set_status(2);
 }
 
+void Info::open_outfile( const std::string& fn ) {
+  os = new std::ofstream( fn.c_str(), std::ios::out );
+  if ( format == 1 ) {
+    // write XML header
+  }
+}
