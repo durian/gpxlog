@@ -1,8 +1,5 @@
 /*
-  001 Initial for 2.1.3
-      Removed MACK APL ConvertPath ifdef/function
-      Reinstated...
-  002 check against prev pos
+  (c) pjb 2013
 */
 
 #include <string>
@@ -33,11 +30,6 @@
 
 #include "gpxlog.h"
 
-// XPLM_MSG_PLANE_LOADED  102
-// XPLM_MSG_PLANE_CRASHED 101
-
-#define ERAD 6378145.f /* radius of alien planet "earth" */
-
 std::string to_str(long i) {
   std::ostringstream ostr;
   ostr << i;
@@ -46,34 +38,24 @@ std::string to_str(long i) {
 
 /* distance between points */
 static double distanceto(double lat0, double lon0, double lat1, double lon1) {
-  double slat = sinf((lat1-lat0) * (double)(M_PI/360));
-  double slon = sinf((lon1-lon0) * (double)(M_PI/360));
-  double aa   = slat*slat + cosf(lat0 * (double)(M_PI/180)) * cosf(lat1 * (double)(M_PI/180)) * slon*slon;
-  return ERAD * 2 * atan2f(sqrtf(aa), sqrtf(1-aa));
+  double slat = sin((lat1-lat0) * (double)(M_PI/360));
+  double slon = sin((lon1-lon0) * (double)(M_PI/360));
+  double aa   = slat*slat + cos(lat0 * (double)(M_PI/180)) * cos(lat1 * (double)(M_PI/180)) * slon * slon;
+  return 6378145.0 * 2 * atan2(sqrtf(aa), sqrt(1-aa));
 }
-
 
 #if APL && __MACH__
 int ConvertPath(const char * inPath, char * outPath, int outPathMaxLen);
-#endif
-
-/* Global data file */
-FILE *gOutputFile;
-
-/* Global System path to data file */
-char gOutputPath[255];
-
-#if APL && __MACH__
 char outputPath2[255];
 int Result = 0;
 #endif
 
-/* Global Status of recording function GPXLOG_OFF, GPXLOG_ON */
-enum gpxlog_status gGPXStatus;
 
-/* Global time struct */
-time_t t;
-struct tm *plugin_t;
+FILE *gOutputFile; // Global gpx file 
+char gOutputPath[255]; // Global System path to gpx file 
+enum gpxlog_status gGPXStatus; // Status GPXLOG_OFF, GPXLOG_ON 
+time_t t;            // Time
+struct tm *plugin_t; // time in xplane
 char timeoutstr[32];
 
 /* XML header */
@@ -87,15 +69,16 @@ char  filebase[255];
 const char* sepchar = XPLMGetDirectorySeparator();
 int   result = 0;
 
-double prev_lat = 1000;
-double prev_lon = 1000;
+// "Previous" logged point
+double prev_lat =  1000;
+double prev_lon =  1000;
 double prev_alt = -1;
 double prev_hdg = -1;
 double prev_gsp = -1;
 int    prev_psd = -1;
 int    prev_spd = -1;
 
-double t_dist = 0.0;
+double t_dist = 0.0; // Total track distance
 
 XPLMMenuID	myMenu;
 int		mySubMenuItem;
@@ -107,63 +90,65 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc) {
 
   XPLMDebugString( "Starting gpxlog.\n" );
 
-  /* Locate the X-System directory. */
-  XPLMGetSystemPath(filebase);
+  
+  XPLMGetSystemPath(filebase); // Locate the X-System directory
 
-  /* Data refs. */
+  // Data refs.
   gZuluTime     = XPLMFindDataRef("sim/time/zulu_time_sec");
   gPlaneLat     = XPLMFindDataRef("sim/flightmodel/position/latitude");
   gPlaneLon     = XPLMFindDataRef("sim/flightmodel/position/longitude");
   gPlaneAlt     = XPLMFindDataRef("sim/flightmodel/position/elevation"); // y_agl ?
   gPlaneHeading = XPLMFindDataRef("sim/flightmodel/position/hpath");
-  gPlaneIAS     = XPLMFindDataRef("sim/flightmodel/position/indicated_airspeed");//groundspeed ?
+  gPlaneIAS     = XPLMFindDataRef("sim/flightmodel/position/indicated_airspeed");
   gPlaneGSP     = XPLMFindDataRef("sim/flightmodel/position/groundspeed");
   gPlaneTAS     = XPLMFindDataRef("sim/flightmodel/position/true_airspeed");
   gSimPaused    = XPLMFindDataRef("sim/time/paused");
   gSimSpeed     = XPLMFindDataRef("sim/time/sim_speed");
 
 
-  /* Register the callback for once a second.  */
+  // Register the callback 
   XPLMRegisterFlightLoopCallback(
-			 MyFlightLoopCallback,	/* Callback */
-			 GPXLOG_INTERVAL,	/* Interval */
-			 NULL);			/* Not used */
+			 MyFlightLoopCallback,
+			 GPXLOG_INTERVAL,
+			 NULL);
 
 
-
-  /* First we put a new menu item into the plugin menu.
-   * This menu item will contain a submenu for us. */
+  /*
+SDK210TestsMenuItem = XPLMAppendMenuItem(XPLMFindPluginsMenu(), "SDK210Tests", NULL, 1);
+SDK210TestsMenuId = XPLMCreateMenu("SDK210Tests", XPLMFindPluginsMenu(), SDK210TestsMenuItem, SDK210TestsMenuHandler, NULL);
+SDK210TestsMenuItem2 = XPLMAppendMenuItem(SDK210TestsMenuId, "SDK210Tests", (void *)"SDK210Tests", 1)
+  */
+  // First we put a new menu item into the plugin menu.
   mySubMenuItem = XPLMAppendMenuItem(
-		     XPLMFindPluginsMenu(),	/* Put in plugins menu */
-		     "GPX Log",  	        /* Item title */
-		     0,				/* Item ref */
-		     1);			/* English charset */
+				     XPLMFindPluginsMenu(), // Plugins menu 
+				     "GPX Log", // Menu title
+				     0, // Item ref
+				     1); // English 
 
-  /* Now create a submenu attached to our menu item. */
+  // Now create a submenu attached to our menu items.
   myMenu = XPLMCreateMenu(
-		  "gpxlog",
-		  XPLMFindPluginsMenu(),
-		  mySubMenuItem, 		/* Menu Item to attach to. */
-		  MyMenuHandlerCallback,	/* The handler */
-		  0);				/* Handler Ref */
+			  "GPX Log",
+			  XPLMFindPluginsMenu(),
+			  mySubMenuItem, /* Menu Item to attach to. */
+			  MyMenuHandlerCallback,/* The handler */
+			  0);			/* Handler Ref */
 
-  /* Append menu items to our submenu. */
+  // Append menu items to our submenu.
   XPLMAppendMenuItem( myMenu,
-		      "GPX log - ON",
-		      (void *)GPXLOG_ON,
+		      "Log - OFF",
+		      (void*)GPXLOG_OFF,
 		      1);
   XPLMAppendMenuItem( myMenu,
-		      "GPX log - OFF",
-		      (void *)GPXLOG_OFF,
+		      "Log - ON",
+		      (void*)GPXLOG_ON,
 		      1);
 
   /* Init */
   gOutputFile = NULL;
   gGPXStatus  = GPXLOG_OFF;
 
-  //this seems backwards, check
-  XPLMEnableMenuItem(myMenu, GPXLOG_OFF, 1);
-  XPLMEnableMenuItem(myMenu, GPXLOG_ON, 0);
+  XPLMEnableMenuItem(myMenu, GPXLOG_OFF, 0);
+  XPLMEnableMenuItem(myMenu, GPXLOG_ON, 1);
 
   XPLMDebugString( "Initialised gpxlog.\n" );
 
@@ -323,8 +308,8 @@ void gpxlog_stop() {
 
   XPLMDebugString( "gpxlog_stop() called.\n" );
 
-  XPLMEnableMenuItem(myMenu, GPXLOG_OFF, 1);
-  XPLMEnableMenuItem(myMenu, GPXLOG_ON, 0);
+  XPLMEnableMenuItem(myMenu, GPXLOG_OFF, 0);
+  XPLMEnableMenuItem(myMenu, GPXLOG_ON, 1);
 
   if (gOutputFile) {
     // last point (clean up logic/order)
@@ -375,8 +360,8 @@ void gpxlog_start() {
 
   XPLMDebugString( "gpxlog_start() called.\n" );
 
-  XPLMEnableMenuItem(myMenu, GPXLOG_OFF, 0);
-  XPLMEnableMenuItem(myMenu, GPXLOG_ON, 1);
+  XPLMEnableMenuItem(myMenu, GPXLOG_OFF, 1);
+  XPLMEnableMenuItem(myMenu, GPXLOG_ON, 0);
 
   t        = time(NULL);
   plugin_t = gmtime(&t);
