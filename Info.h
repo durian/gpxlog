@@ -42,6 +42,7 @@ class Info {
   void open_outfile( const std::string& fn );
   void write_outfile( const std::string& );
   void close_outfile();
+  void flush_outfile();
 };
 
 #endif

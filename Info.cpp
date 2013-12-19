@@ -108,4 +108,9 @@ void Info::close_outfile() {
     os->close();
   }
 }
+void Info::flush_outfile() {
+  if ( os->is_open() ) {
+    os->flush();
+  }
+}
 

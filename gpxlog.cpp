@@ -36,6 +36,12 @@ std::string to_str(long i) {
   ostr << i;
   return ostr.str();
 }
+std::string to_str(double i, int p) {
+  std::ostringstream ostr;
+  ostr << std::setiosflags(std::ios::fixed) << std::setprecision(p) << i;
+  //ostr << i;
+  return ostr.str();
+}
 
 /* distance between points */
 static double distanceto(double lat0, double lon0, double lat1, double lon1) {
@@ -292,20 +298,21 @@ float MyFlightLoopCallback( float inElapsedSinceLastCall,
 	t_dist += dfp;
 
 	// maybe a format option (WordTraffic, GPX, etc)
-	fprintf( gOutputFile, "<trkpt lat=\"%f\" lon=\"%f\">\n", lat, lon );
-	fprintf( gOutputFile, "<time>%s</time>\n", timeoutstr );
-	fprintf( gOutputFile, "<ele>%.1f</ele>\n", alt );
-	fprintf( gOutputFile, "<hdg>%.1f</hdg>\n", hdg ); /* non standard gpx field */
-	fprintf( gOutputFile, "<dfp>%.1f</dfp>\n", dfp ); /* distance from previous */
-	fprintf( gOutputFile, "<tsd>%.1f</tsd>\n", t_dist ); /* total segment distance */
-	fprintf( gOutputFile, "</trkpt>\n");
-	fflush(gOutputFile); //maybe a config item
+	info->write_outfile( "<trkpt lat=\""+to_str(lat,5)+"\" lon=\""+to_str(lon,5)+"\">" );
+	info->write_outfile( "<time>"+std::string(timeoutstr)+"</time>" );
+	info->write_outfile( "<ele>"+to_str(alt, 1)+"</ele>" );
+	info->write_outfile( "<hdg>"+to_str(hdg, 1)+"</hdg>" );
+	info->write_outfile( "<dfp>"+to_str(hdg, 1)+"</dfp>" );
+	info->write_outfile( "<tsd>"+to_str(t_dist, 1)+"</tsd>" );
+	info->write_outfile( "</trkpt>" );
+
+	info->flush_outfile(); //maybe a config item?
+
 	prev_lat = lat;
 	prev_lon = lon;
 	prev_alt = alt;
 	prev_hdg = hdg;
 	prev_gsp = gsp;
-	
       }
     }
   }
@@ -343,19 +350,17 @@ void gpxlog_stop() {
       plugin_t = gmtime(&t);
       t_dist += dfp;
       strftime(timeoutstr, 32, "%Y-%m-%dT%H:%M:%SZ", plugin_t);
-      fprintf( gOutputFile, "<trkpt lat=\"%f\" lon=\"%f\">\n", lat, lon );
-      fprintf( gOutputFile, "<time>%s</time>\n", timeoutstr );
-      fprintf( gOutputFile, "<ele>%.1f</ele>\n", alt );
-      fprintf( gOutputFile, "<hdg>%.1f</hdg>\n", hdg ); /* non standard gpx field */
-      fprintf( gOutputFile, "<dfp>%.1f</dfp>\n", dfp ); /* distance from previous */
-      fprintf( gOutputFile, "<tsd>%.1f</tsd>\n", t_dist ); /* total segment distance */
-      fprintf( gOutputFile, "</trkpt>\n");
+      info->write_outfile( "<trkpt lat=\""+to_str(lat,5)+"\" lon=\""+to_str(lon,5)+"\">" );
+      info->write_outfile( "<time>"+std::string(timeoutstr)+"</time>" );
+      info->write_outfile( "<ele>"+to_str(alt, 1)+"</ele>" );
+      info->write_outfile( "<hdg>"+to_str(hdg, 1)+"</hdg>" );
+      info->write_outfile( "<dfp>"+to_str(hdg, 1)+"</dfp>" );
+      info->write_outfile( "<tsd>"+to_str(t_dist, 1)+"</tsd>" );
+      info->write_outfile( "</trkpt>" );
     }
-    fprintf( gOutputFile, "</trkseg></trk></gpx>\n" );
+    info->write_outfile( "</trkseg></trk></gpx>" );
   }
-  if (gOutputFile) {
-    fclose(gOutputFile);
-  }
+  info->close_outfile();
   gOutputFile = NULL;
   gGPXStatus = GPXLOG_OFF;
   prev_lat = 1000;
@@ -392,16 +397,7 @@ void gpxlog_start() {
 #endif
 
   info->open_outfile( gOutputPath );
-  /*
-  gOutputFile = fopen( gOutputPath, "w+" );
-  
-  if ( gOutputFile ) {
-    fprintf( gOutputFile, "%s\n%s\n%s\n%s\n", xml1, xml2, xml3, xml4 );
-    gGPXStatus = GPXLOG_ON;
-    XPLMDebugString( gOutputPath );
-    XPLMDebugString( "\n" );
-  }
-  */
+  gGPXStatus = GPXLOG_ON; // TODO error checking
 }
 
 #if APL && __MACH__
