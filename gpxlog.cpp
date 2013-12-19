@@ -401,6 +401,8 @@ void gpxlog_start() {
   if ( gOutputFile ) {
     fprintf( gOutputFile, "%s\n%s\n%s\n%s\n", xml1, xml2, xml3, xml4 );
     gGPXStatus = GPXLOG_ON;
+    XPLMDebugString( gOutputPath );
+    XPLMDebugString( "\n" );
   }
 }
 
