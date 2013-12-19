@@ -40,6 +40,8 @@ class Info {
   void set_status(int s) { status = s; }
   void read_prefs( const std::string& );
   void open_outfile( const std::string& fn );
+  void write_outfile( const std::string& );
+  void close_outfile();
 };
 
 #endif

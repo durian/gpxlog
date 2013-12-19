@@ -94,3 +94,13 @@ void Info::open_outfile( const std::string& fn ) {
     // write XML header
   }
 }
+void Info::write_outfile( const std::string& l ) {
+  if ( os->is_open() ) {
+    (*os) << l << std::endl;
+  }
+}
+void Info::close_outfile() {
+  if ( os->is_open() ) {
+    os->close();
+  }
+}
