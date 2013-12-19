@@ -257,7 +257,7 @@ float MyFlightLoopCallback( float inElapsedSinceLastCall,
     // save psd, new segment if starting after pause again?
 
     //  Write GPX trkpt, if not paused
-    if ( (psd == 0) && gOutputFile ) {
+    if ( psd == 0 ) {
       t += spd;
 
       // check if we want to log (distance, time, heading)
@@ -332,35 +332,34 @@ void gpxlog_stop() {
   XPLMEnableMenuItem(myMenu, GPXLOG_OFF, 0);
   XPLMEnableMenuItem(myMenu, GPXLOG_ON, 1);
 
-  if (gOutputFile) {
-    // last point (clean up logic/order)
-    double lat = XPLMGetDataf(gPlaneLat);
-    double lon = XPLMGetDataf(gPlaneLon);
-    double alt = XPLMGetDataf(gPlaneAlt);
-    double hdg = XPLMGetDataf(gPlaneHeading);
-    int    psd = XPLMGetDatai(gSimPaused);
-    int    spd = XPLMGetDatai(gSimSpeed);
-    double dfp = 0.0;
-    if ( (prev_lat < 999) && (prev_lon < 999) ) {
-      dfp = distanceto(prev_lat, prev_lon, lat, lon); //abs?
-      // large distance here could mean crash and back at airport...
-    }
-    if ( psd == 0 ) {
-      t += spd;
-      plugin_t = gmtime(&t);
-      t_dist += dfp;
-      strftime(timeoutstr, 32, "%Y-%m-%dT%H:%M:%SZ", plugin_t);
-      info->write_outfile( "<trkpt lat=\""+to_str(lat,5)+"\" lon=\""+to_str(lon,5)+"\">" );
-      info->write_outfile( "<time>"+std::string(timeoutstr)+"</time>" );
-      info->write_outfile( "<ele>"+to_str(alt, 1)+"</ele>" );
-      info->write_outfile( "<hdg>"+to_str(hdg, 1)+"</hdg>" );
-      info->write_outfile( "<dfp>"+to_str(hdg, 1)+"</dfp>" );
-      info->write_outfile( "<tsd>"+to_str(t_dist, 1)+"</tsd>" );
-      info->write_outfile( "</trkpt>" );
-    }
-    info->write_outfile( "</trkseg></trk></gpx>" );
+  // last point (clean up logic/order)
+  double lat = XPLMGetDataf(gPlaneLat);
+  double lon = XPLMGetDataf(gPlaneLon);
+  double alt = XPLMGetDataf(gPlaneAlt);
+  double hdg = XPLMGetDataf(gPlaneHeading);
+  int    psd = XPLMGetDatai(gSimPaused);
+  int    spd = XPLMGetDatai(gSimSpeed);
+  double dfp = 0.0;
+  if ( (prev_lat < 999) && (prev_lon < 999) ) {
+    dfp = distanceto(prev_lat, prev_lon, lat, lon); //abs?
+    // large distance here could mean crash and back at airport...
   }
+  if ( psd == 0 ) {
+    t += spd;
+    plugin_t = gmtime(&t);
+    t_dist += dfp;
+    strftime(timeoutstr, 32, "%Y-%m-%dT%H:%M:%SZ", plugin_t);
+    info->write_outfile( "<trkpt lat=\""+to_str(lat,5)+"\" lon=\""+to_str(lon,5)+"\">" );
+    info->write_outfile( "<time>"+std::string(timeoutstr)+"</time>" );
+    info->write_outfile( "<ele>"+to_str(alt, 1)+"</ele>" );
+    info->write_outfile( "<hdg>"+to_str(hdg, 1)+"</hdg>" );
+    info->write_outfile( "<dfp>"+to_str(hdg, 1)+"</dfp>" );
+    info->write_outfile( "<tsd>"+to_str(t_dist, 1)+"</tsd>" );
+    info->write_outfile( "</trkpt>" );
+  }
+  info->write_outfile( "</trkseg></trk></gpx>" );
   info->close_outfile();
+
   gOutputFile = NULL;
   gGPXStatus = GPXLOG_OFF;
   prev_lat = 1000;

@@ -99,17 +99,17 @@ void Info::open_outfile( const std::string& fn ) {
   }
 }
 void Info::write_outfile( const std::string& l ) {
-  if ( os->is_open() ) {
+  if ( 1 || os->is_open() ) {
     (*os) << l << std::endl;
   }
 }
 void Info::close_outfile() {
-  if ( os->is_open() ) {
+  if ( 1 || os->is_open() ) {
     os->close();
   }
 }
 void Info::flush_outfile() {
-  if ( os->is_open() ) {
+  if ( 1 || os->is_open() ) {
     os->flush();
   }
 }
