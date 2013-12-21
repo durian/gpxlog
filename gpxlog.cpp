@@ -453,6 +453,7 @@ void gpxlog_start() {
 
 #if APL && __MACH__
   Result = ConvertPath(gOutputPath, outputPath2, sizeof(gOutputPath));
+  XPLMDebugString( "in APL"  );
   if (Result == 0)
     strcpy(gOutputPath, outputPath2);
   else
