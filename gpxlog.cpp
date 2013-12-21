@@ -135,7 +135,7 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc) {
   XPLMDebugString( "\n" );
 
   std::string sep = std::string(XPLMGetDirectorySeparator());
-  char s = XPLMGetDirectorySeparator();
+  char *s = XPLMGetDirectorySeparator();
 
   strcpy( gOutputPath, filebase );
   strcat( gOutputPath, "Resources" );
