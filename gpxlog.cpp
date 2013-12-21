@@ -137,17 +137,18 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc) {
   std::string sep = std::string(XPLMGetDirectorySeparator());
   std::string prefsfile = std::string(filebase) + "Resources" + sep + "plugins" + sep + "gpxlog.ini";
   XPLMDebugString( prefsfile.c_str() );
-  char prefs_tmp[255];
+  XPLMDebugString( "\n" );
+  
 #if APL && __MACH__
   Result = ConvertPath(prefsfile.c_str(), outputPath2, sizeof(prefsfile.c_str()));
   if (Result == 0) {
-    strcpy(prefs_tmp, outputPath2);
-    prefsfile = std::string( prefs_tmp );
+    prefsfile = std::string( outputPath2 );
   }
   else
     XPLMDebugString("TimedProccessing - Unable to convert path\n");
 #endif
   XPLMDebugString( prefsfile.c_str() );
+  XPLMDebugString( "\n" );
 
   info->read_prefs( prefsfile );
   if ( info->get_status() == -1 ) {
@@ -177,12 +178,6 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc) {
 			 GPXLOG_INTERVAL,
 			 NULL);
 
-
-  /*
-SDK210TestsMenuItem = XPLMAppendMenuItem(XPLMFindPluginsMenu(), "SDK210Tests", NULL, 1);
-SDK210TestsMenuId = XPLMCreateMenu("SDK210Tests", XPLMFindPluginsMenu(), SDK210TestsMenuItem, SDK210TestsMenuHandler, NULL);
-SDK210TestsMenuItem2 = XPLMAppendMenuItem(SDK210TestsMenuId, "SDK210Tests", (void *)"SDK210Tests", 1)
-  */
   // First we put a new menu item into the plugin menu
   mySubMenuItem = XPLMAppendMenuItem(
 				     XPLMFindPluginsMenu(), // Plugins menu 
@@ -453,7 +448,7 @@ void gpxlog_start() {
 
 #if APL && __MACH__
   Result = ConvertPath(gOutputPath, outputPath2, sizeof(gOutputPath));
-  XPLMDebugString( "in APL"  );
+  XPLMDebugString( "in APL\n"  );
   if (Result == 0)
     strcpy(gOutputPath, outputPath2);
   else
