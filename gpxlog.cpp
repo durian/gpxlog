@@ -458,7 +458,8 @@ void gpxlog_start() {
   else
     XPLMDebugString("TimedProccessing - Unable to convert path\n");
 #endif
-
+  XPLMDebugString( gOutputPath  );
+  XPLMDebugString( "\n" );
   info->open_outfile( gOutputPath );
   gGPXStatus = GPXLOG_ON; // TODO error checking
 }
