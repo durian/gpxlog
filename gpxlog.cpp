@@ -447,6 +447,8 @@ void gpxlog_start() {
   strftime( timeoutstr, 32, "%Y%m%d%H%M%S.gpx", plugin_t );
   strcpy( gOutputPath, filebase );
   strcat( gOutputPath, timeoutstr );
+  XPLMDebugString( gOutputPath  );
+  XPLMDebugString( "\n" );
 
 #if APL && __MACH__
   Result = ConvertPath(gOutputPath, outputPath2, sizeof(gOutputPath));
