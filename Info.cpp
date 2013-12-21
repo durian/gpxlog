@@ -113,7 +113,7 @@ void Info::flush_outfile() {
   }
 }
 
-void Info::write_geopos( const struct geopos& p, std::string t, double dfp, double tsd ) {
+void Info::write_geopos( const struct geopos& p, const std::string& t, double dfp, double tsd ) {
   std::ostringstream ostr;
   ostr << "<trkpt lat=\"";
   ostr << std::setiosflags(std::ios::fixed) << std::setprecision(5) << p.lat;

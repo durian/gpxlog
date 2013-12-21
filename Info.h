@@ -43,7 +43,7 @@ class Info {
   void write_outfile( const std::string& );
   void close_outfile();
   void flush_outfile();
-  void write_geopos( const struct geopos& );
+  void write_geopos( const struct geopos&, const std::string&, double, double );
 };
 
 #endif
