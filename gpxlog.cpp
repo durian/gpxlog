@@ -136,6 +136,15 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc) {
 
   std::string sep = std::string(XPLMGetDirectorySeparator());
   std::string prefsfile = std::string(filebase) + "Resources" + sep + "plugins" + sep + "gpxlog.ini";
+  XPLMDebugString( prefsfile.c_str() );
+#if APL && __MACH__
+  Result = ConvertPath(prefsfile, outputPath2, sizeof(prefsfile));
+  if (Result == 0)
+    strcpy(prefsfile, outputPath2);
+  else
+    XPLMDebugString("TimedProccessing - Unable to convert path\n");
+#endif
+  XPLMDebugString( prefsfile.c_str() );
 
   info->read_prefs( prefsfile );
   if ( info->get_status() == -1 ) {
