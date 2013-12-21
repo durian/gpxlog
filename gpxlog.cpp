@@ -141,6 +141,8 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc) {
   
 #if APL && __MACH__
   Result = ConvertPath(prefsfile.c_str(), outputPath2, sizeof(prefsfile.c_str()));
+  XPLMDebugString( outputPath2 );
+  XPLMDebugString( "\n" );
   if (Result == 0) {
     prefsfile = std::string( outputPath2 );
   }
