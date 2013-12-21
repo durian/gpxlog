@@ -113,24 +113,28 @@ void Info::flush_outfile() {
   }
 }
 
-void Info::write_geopos( const struct geopos& p ) {
+void Info::write_geopos( const struct geopos& p, std::string t, double dfp, double tsd ) {
   std::ostringstream ostr;
   ostr << "<trkpt lat=\"";
   ostr << std::setiosflags(std::ios::fixed) << std::setprecision(5) << p.lat;
   ostr << "\" lon=\"";
   ostr << std::setiosflags(std::ios::fixed) << std::setprecision(5) << p.lon;
   ostr << "\">" << std::endl;
-  //write_outfile( "<time>"+std::string(timeoutstr)+"</time>" );
+  ostr << "<time>" << t << "</time>" << std::endl;
   ostr << "<ele>";
   ostr << std::setiosflags(std::ios::fixed) << std::setprecision(1) << p.alt;
   ostr << "</ele>" << std::endl;
   ostr << "<hdg>";
   ostr << std::setiosflags(std::ios::fixed) << std::setprecision(1) << p.hdg;
   ostr << "</hdg>" << std::endl;
-  //write_outfile( "<dfp>"+to_str2(dfp, 1)+"</dfp>" );
-  //write_outfile( "<tsd>"+to_str2(t_dist, 1)+"</tsd>" );
+  ostr << "<dfp>";
+  ostr << std::setiosflags(std::ios::fixed) << std::setprecision(1) << dfp;
+  ostr << "</dfp>" << std::endl;
+  ostr << "<tsd>";
+  ostr << std::setiosflags(std::ios::fixed) << std::setprecision(1) << tsd;
+  ostr << "</tsd>" << std::endl;
   ostr << "</trkpt>" << std::endl;
   if ( os->is_open() ) {
-    (*os) << ostr.str() << std::endl;
+    (*os) << ostr.str();
   }
 }

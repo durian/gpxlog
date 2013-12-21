@@ -351,6 +351,7 @@ float MyFlightLoopCallback( float inElapsedSinceLastCall,
 	t_dist += dfp;
 
 	// maybe a format option (WordTraffic, GPX, etc)
+	/*
 	info->write_outfile( "<trkpt lat=\""+to_str2(cp.lat,5)+"\" lon=\""+to_str2(cp.lon,5)+"\">" );
 	info->write_outfile( "<time>"+std::string(timeoutstr)+"</time>" );
 	info->write_outfile( "<ele>"+to_str2(cp.alt, 1)+"</ele>" );
@@ -358,9 +359,8 @@ float MyFlightLoopCallback( float inElapsedSinceLastCall,
 	info->write_outfile( "<dfp>"+to_str2(dfp, 1)+"</dfp>" );
 	info->write_outfile( "<tsd>"+to_str2(t_dist, 1)+"</tsd>" );
 	info->write_outfile( "</trkpt>" );
-
-	info->write_geopos( cp ); //test
-
+	*/
+	info->write_geopos( cp, std::string(timeoutstr), dfp, t_dist ); 
 	info->flush_outfile(); //maybe a config item?
 
 	pp = cp;
