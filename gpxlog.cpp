@@ -135,12 +135,21 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc) {
   XPLMDebugString( "\n" );
 
   std::string sep = std::string(XPLMGetDirectorySeparator());
+  char s = XPLMGetDirectorySeparator();
+
+  strcpy( gOutputPath, filebase );
+  strcat( gOutputPath, "Resources" );
+  strcat( gOutputPath, s );
+  strcat( gOutputPath, "plugins" );
+  strcat( gOutputPath, s );
+  strcat( gOutputPath, "gpxlog.ini" );
+
   std::string prefsfile = std::string(filebase) + "Resources" + sep + "plugins" + sep + "gpxlog.ini";
-  XPLMDebugString( prefsfile.c_str() );
+  XPLMDebugString( gOutputPath );
   XPLMDebugString( "\n" );
   
 #if APL && __MACH__
-  Result = ConvertPath(prefsfile.c_str(), outputPath2, sizeof(prefsfile.c_str()));
+  Result = ConvertPath(gOutputPath, outputPath2, sizeof(gOutputPath));
   XPLMDebugString( outputPath2 );
   XPLMDebugString( "\n" );
   if (Result == 0) {
