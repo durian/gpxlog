@@ -1,6 +1,12 @@
-QT -= core gui
-TARGET = gpxlog.xpl
 TEMPLATE = lib
+QT -= gui core
+
+CONFIG += warn_on plugin release
+CONFIG -= thread exceptions qt rtti debug
+CONFIG -= app_bundle
+CONFIG -= qt core
+
+VERSION = 1.0.0
 
 #QMAKE_CXX = /usr/local/bin/g++-4.7
 
@@ -8,19 +14,10 @@ INCLUDEPATH += ../SDK/CHeaders/XPLM
 INCLUDEPATH += ../SDK/CHeaders/Wrappers
 INCLUDEPATH += ../SDK/CHeaders/Widgets
 
-#SDK/Libraries/Mac
-
 QMAKE_CXXFLAGS += -fPIC
 QMAKE_LFLAGS += -shared -fPIC
 
-# Defined to use X-Plane SDK 2.0 capabilities - no backward compatibility before 9.0
 DEFINES += XPLM200
-
-CONFIG   += plugin 
-CONFIG   += console warn_on release shared
-
-CONFIG   -= app_bundle
-CONFIG   -= qt
 
 CONFIG(debug, debug|release) {
     # Debug
@@ -41,6 +38,7 @@ unix:!macx {
     TARGET = lin.xpl
     CONFIG += x64_86
     CONFIG += x86
+    #just trying QMAKE_LFLAGS += -F.
 }
 macx {
     DEFINES += LIN=0 APL=1 IBM=0

@@ -7,8 +7,7 @@
 
 #include <stdlib.h>
 
-#include "XPLMUtilities.h"
-
+#include "gpxlog.h"
 #include "Info.h"
 
 // ----------------------------------------------------------------------------
@@ -67,7 +66,6 @@ void Info::read_prefs( const std::string& filename ) {
       std::string rhs = trim(a_line.substr( pos+1 ), " \t\r\n");
       if ( (lhs != "") && (rhs != "") ) {
 	std::string tmp = lhs +":"+rhs+"\n";
-	XPLMDebugString( tmp.c_str() );
 	if ( lhs == "start_immediately" ) {
 	  if ( rhs == "1" ) {
 	    start_immediately = 1;
@@ -90,6 +88,7 @@ void Info::read_prefs( const std::string& filename ) {
 
 void Info::open_outfile( const std::string& fn ) {
   os = new std::ofstream( fn.c_str(), std::ios::out );
+
   if ( format == 1 ) {
     // write XML header
     write_outfile("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>");
@@ -99,18 +98,39 @@ void Info::open_outfile( const std::string& fn ) {
   }
 }
 void Info::write_outfile( const std::string& l ) {
-  if ( 1 || os->is_open() ) {
+  if ( os->is_open() ) {
     (*os) << l << std::endl;
   }
 }
 void Info::close_outfile() {
-  if ( 1 || os->is_open() ) {
+  if ( os->is_open() ) {
     os->close();
   }
 }
 void Info::flush_outfile() {
-  if ( 1 || os->is_open() ) {
+  if ( os->is_open() ) {
     os->flush();
   }
 }
 
+void Info::write_geopos( const struct geopos& p ) {
+  std::ostringstream ostr;
+  ostr << "<trkpt lat=\"";
+  ostr << std::setiosflags(std::ios::fixed) << std::setprecision(5) << p.lat;
+  ostr << "\" lon=\"";
+  ostr << std::setiosflags(std::ios::fixed) << std::setprecision(5) << p.lon;
+  ostr << "\">" << std::endl;
+  //write_outfile( "<time>"+std::string(timeoutstr)+"</time>" );
+  ostr << "<ele>";
+  ostr << std::setiosflags(std::ios::fixed) << std::setprecision(1) << p.alt;
+  ostr << "</ele>" << std::endl;
+  ostr << "<hdg>";
+  ostr << std::setiosflags(std::ios::fixed) << std::setprecision(1) << p.hdg;
+  ostr << "</hdg>" << std::endl;
+  //write_outfile( "<dfp>"+to_str2(dfp, 1)+"</dfp>" );
+  //write_outfile( "<tsd>"+to_str2(t_dist, 1)+"</tsd>" );
+  ostr << "</trkpt>" << std::endl;
+  if ( os->is_open() ) {
+    (*os) << ostr.str() << std::endl;
+  }
+}

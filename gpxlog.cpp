@@ -36,19 +36,23 @@ std::string to_str(long i) {
   ostr << i;
   return ostr.str();
 }
-std::string to_str(double i, int p) {
+
+std::string to_str2(double i, int p) {
   std::ostringstream ostr;
   ostr << std::setiosflags(std::ios::fixed) << std::setprecision(p) << i;
   //ostr << i;
   return ostr.str();
 }
 
-/* distance between points */
+// distance between points
 static double distanceto(double lat0, double lon0, double lat1, double lon1) {
   double slat = sin((lat1-lat0) * (double)(M_PI/360));
   double slon = sin((lon1-lon0) * (double)(M_PI/360));
   double aa   = slat*slat + cos(lat0 * (double)(M_PI/180)) * cos(lat1 * (double)(M_PI/180)) * slon * slon;
   return 6378145.0 * 2 * atan2(sqrtf(aa), sqrt(1-aa));
+}
+static double distanceto(geopos& p0, geopos& p1) {
+  return distanceto(p0.lat, p0.lon, p1.lat, p1.lon);
 }
 
 #if APL && __MACH__
@@ -56,6 +60,36 @@ int ConvertPath(const char * inPath, char * outPath, int outPathMaxLen);
 char outputPath2[255];
 int Result = 0;
 #endif
+
+/* X-Plane Dataref:  sim/time/zulu_time_sec */
+XPLMDataRef gZuluTime;
+
+/* X-Plane Dataref:  sim/flightmodel/position/latitude */
+XPLMDataRef gPlaneLat;
+
+/* X-Plane Dataref: sim/flightmodel/position/longitude */
+XPLMDataRef gPlaneLon;
+
+/* X-Plane Dataref: sim/flightmodel/position/elevation */
+XPLMDataRef gPlaneAlt;
+
+/* X-Plane Dataref: sim/flightmodel/position/psi */
+XPLMDataRef gPlaneHeading;
+
+/* X-Plane Dataref: sim/flightmodel/position/indicated_airspeed */
+XPLMDataRef gPlaneIAS;
+
+/* X-Plane Dataref: sim/flightmodel/position/groundspeed */
+XPLMDataRef gPlaneGSP;
+
+/* X-Plane Dataref: sim/flightmodel/position/true_airspeed */
+XPLMDataRef gPlaneTAS;
+
+/* X-Plane Dataref: sim/time/paused */
+XPLMDataRef gSimPaused;
+
+/* X-Plane Dataref: sim/time/sim_speed */
+XPLMDataRef gSimSpeed;
 
 Info* info = new Info(); // config settings, TODO: read from file. Globals here
 
@@ -71,14 +105,18 @@ std::string version = "1.0";
 char  filebase[255];
 int   result = 0;
 
-// "Previous" logged point
-double prev_lat =  1000;
-double prev_lon =  1000;
-double prev_alt = -1;
-double prev_hdg = -1;
-double prev_gsp = -1;
-int    prev_psd = -1;
-int    prev_spd = -1;
+// "Previous" logged point, and "null" point
+struct geopos np = {
+  .t   =     0,
+  .lat =  1000,
+  .lon =  1000,
+  .alt = -1,
+  .hdg = -1,
+  .gsp = -1,
+  .psd = -1,
+  .spd = -1
+};
+struct geopos pp = np;
 
 double t_dist = 0.0; // Total track distance
 
@@ -233,6 +271,16 @@ void MyMenuHandlerCallback( void *inMenuRef, void *inItemRef) {
   }
 }
 
+void get_geopos(geopos& the_pos) {
+  the_pos.lat = XPLMGetDataf(gPlaneLat);
+  the_pos.lon = XPLMGetDataf(gPlaneLon);
+  the_pos.alt = XPLMGetDataf(gPlaneAlt);
+  the_pos.hdg = XPLMGetDataf(gPlaneHeading);
+  the_pos.gsp = XPLMGetDataf(gPlaneGSP);
+  the_pos.psd = XPLMGetDatai(gSimPaused);
+  the_pos.spd = XPLMGetDatai(gSimSpeed);
+}
+
 float MyFlightLoopCallback( float inElapsedSinceLastCall,
                             float inElapsedTimeSinceLastFlightLoop,
                             int inCounter,
@@ -244,6 +292,7 @@ float MyFlightLoopCallback( float inElapsedSinceLastCall,
   (void)inRefcon;
 
   if( gGPXStatus == GPXLOG_ON ) {
+    /*
     double lat = XPLMGetDataf(gPlaneLat);
     double lon = XPLMGetDataf(gPlaneLon);
     double alt = XPLMGetDataf(gPlaneAlt); // is already meters?
@@ -251,14 +300,17 @@ float MyFlightLoopCallback( float inElapsedSinceLastCall,
     double gsp = XPLMGetDataf(gPlaneGSP);
     int    psd = XPLMGetDatai(gSimPaused);
     int    spd = XPLMGetDatai(gSimSpeed);
-    
+    */
+    struct geopos cp; //current pos, pp, previous pos
+    get_geopos(cp);
+
     double dfp = 0.0; //distance from previous
 
     // save psd, new segment if starting after pause again?
 
     //  Write GPX trkpt, if not paused
-    if ( psd == 0 ) {
-      t += spd;
+    if ( cp.psd == 0 ) {
+      t += cp.spd;
 
       // check if we want to log (distance, time, heading)
       // First check if turning
@@ -266,14 +318,15 @@ float MyFlightLoopCallback( float inElapsedSinceLastCall,
       int do_log = 0;
       //int do_segment = 0; // new segment, track
 
-      if ( (prev_lat < 999) && (prev_lon < 999) ) {
+      if ( (pp.lat < 999) && (pp.lon < 999) ) {
 
-	// check hdg first, if change, log, than change 
-	if ( fabs(hdg - prev_hdg) > info->delta_hdg ) {
+	// check hdg first, if change, log, then change 
+	if ( fabs(cp.hdg - pp.hdg) > info->delta_hdg ) {
 	  // If we turn, we log
 	  do_log = 1;
 	}
-	dfp = distanceto(prev_lat, prev_lon, lat, lon);
+	//dfp = distanceto(pp.lat, pp.lon, cp.lat, cp.lon);
+	dfp = distanceto(pp, cp);
 	if ( dfp > info->newtrack_dfp ) {
 	  do_log = 1;
 	  gpxlog_stop();
@@ -283,7 +336,7 @@ float MyFlightLoopCallback( float inElapsedSinceLastCall,
 	  // if we don't turn, but move more than 2000 m, we log
 	  do_log = 1;
 	}
-	if ( fabs(alt - prev_alt) > info->delta_alt ) {
+	if ( fabs(cp.alt - pp.alt) > info->delta_alt ) {
 	  // log fast ascend/descend as well, for 3D plots
 	  do_log = 1;
 	}
@@ -298,21 +351,26 @@ float MyFlightLoopCallback( float inElapsedSinceLastCall,
 	t_dist += dfp;
 
 	// maybe a format option (WordTraffic, GPX, etc)
-	info->write_outfile( "<trkpt lat=\""+to_str(lat,5)+"\" lon=\""+to_str(lon,5)+"\">" );
+	info->write_outfile( "<trkpt lat=\""+to_str2(cp.lat,5)+"\" lon=\""+to_str2(cp.lon,5)+"\">" );
 	info->write_outfile( "<time>"+std::string(timeoutstr)+"</time>" );
-	info->write_outfile( "<ele>"+to_str(alt, 1)+"</ele>" );
-	info->write_outfile( "<hdg>"+to_str(hdg, 1)+"</hdg>" );
-	info->write_outfile( "<dfp>"+to_str(hdg, 1)+"</dfp>" );
-	info->write_outfile( "<tsd>"+to_str(t_dist, 1)+"</tsd>" );
+	info->write_outfile( "<ele>"+to_str2(cp.alt, 1)+"</ele>" );
+	info->write_outfile( "<hdg>"+to_str2(cp.hdg, 1)+"</hdg>" );
+	info->write_outfile( "<dfp>"+to_str2(dfp, 1)+"</dfp>" );
+	info->write_outfile( "<tsd>"+to_str2(t_dist, 1)+"</tsd>" );
 	info->write_outfile( "</trkpt>" );
+
+	info->write_geopos( cp ); //test
 
 	info->flush_outfile(); //maybe a config item?
 
+	pp = cp;
+	/*
 	prev_lat = lat;
 	prev_lon = lon;
 	prev_alt = alt;
 	prev_hdg = hdg;
 	prev_gsp = gsp;
+	*/
       }
     }
   }
@@ -333,28 +391,26 @@ void gpxlog_stop() {
   XPLMEnableMenuItem(myMenu, GPXLOG_ON, 1);
 
   // last point (clean up logic/order)
-  double lat = XPLMGetDataf(gPlaneLat);
-  double lon = XPLMGetDataf(gPlaneLon);
-  double alt = XPLMGetDataf(gPlaneAlt);
-  double hdg = XPLMGetDataf(gPlaneHeading);
-  int    psd = XPLMGetDatai(gSimPaused);
-  int    spd = XPLMGetDatai(gSimSpeed);
+  struct geopos cp; //current pos, pp, previous pos
+  get_geopos(cp);
+
   double dfp = 0.0;
-  if ( (prev_lat < 999) && (prev_lon < 999) ) {
-    dfp = distanceto(prev_lat, prev_lon, lat, lon); //abs?
+  if ( (pp.lat < 999) && (pp.lon < 999) ) {
+    //dfp = distanceto(pp.lat, pp.lon, cp.lat, cp.lon); //abs?
+    dfp = distanceto(pp, cp);
     // large distance here could mean crash and back at airport...
   }
-  if ( psd == 0 ) {
-    t += spd;
+  if ( cp.psd == 0 ) {
+    t += cp.spd;
     plugin_t = gmtime(&t);
     t_dist += dfp;
     strftime(timeoutstr, 32, "%Y-%m-%dT%H:%M:%SZ", plugin_t);
-    info->write_outfile( "<trkpt lat=\""+to_str(lat,5)+"\" lon=\""+to_str(lon,5)+"\">" );
+    info->write_outfile( "<trkpt lat=\""+to_str2(cp.lat,5)+"\" lon=\""+to_str2(cp.lon,5)+"\">" );
     info->write_outfile( "<time>"+std::string(timeoutstr)+"</time>" );
-    info->write_outfile( "<ele>"+to_str(alt, 1)+"</ele>" );
-    info->write_outfile( "<hdg>"+to_str(hdg, 1)+"</hdg>" );
-    info->write_outfile( "<dfp>"+to_str(hdg, 1)+"</dfp>" );
-    info->write_outfile( "<tsd>"+to_str(t_dist, 1)+"</tsd>" );
+    info->write_outfile( "<ele>"+to_str2(cp.alt, 1)+"</ele>" );
+    info->write_outfile( "<hdg>"+to_str2(cp.hdg, 1)+"</hdg>" );
+    info->write_outfile( "<dfp>"+to_str2(dfp, 1)+"</dfp>" );
+    info->write_outfile( "<tsd>"+to_str2(t_dist, 1)+"</tsd>" );
     info->write_outfile( "</trkpt>" );
   }
   info->write_outfile( "</trkseg></trk></gpx>" );
@@ -362,12 +418,8 @@ void gpxlog_stop() {
 
   gOutputFile = NULL;
   gGPXStatus = GPXLOG_OFF;
-  prev_lat = 1000;
-  prev_lon = 1000;
-  prev_alt =   -1;
-  prev_hdg =   -1;
-  prev_psd =   -1;
-  prev_spd =   -1;
+
+  pp = np;
   t_dist   =    0.0;
 }
 

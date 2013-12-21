@@ -1,5 +1,5 @@
 make clean
-./qmake gpxlog.pro PRIVATENAMESPACE=GPXLOG
+./qmake gpxlog.pro 
 make
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
@@ -7,7 +7,7 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
     mkdir -p /x/games/X-Plane10/Resources/plugins/gpxlog/64
     cp liblin.xpl.so /x/games/X-Plane10/Resources/plugins/gpxlog/64/lin.xpl 
     make clean
-    ./qmake -spec linux-g++-32 gpxlog.pro PRIVATENAMESPACE=GPXLOG
+    ./qmake -spec linux-g++-32 gpxlog.pro 
     make
     mkdir -p /x/games/X-Plane10/Resources/plugins/gpxlog/32
     cp liblin.xpl.so /x/games/X-Plane10/Resources/plugins/gpxlog/32/lin.xpl
