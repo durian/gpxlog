@@ -149,7 +149,7 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc) {
   if (Result == 0) {
     prefsfile = std::string( outputPath2 );
   } else {
-    XPLMDebugString("TimedProccessing - Unable to convert path\n");
+    XPLMDebugString("Unable to convert path\n");
   }
 #endif
   XPLMDebugString( prefsfile.c_str() );
@@ -420,7 +420,7 @@ void gpxlog_start() {
   if ( Result == 0 ) {
     strcpy(gOutputPath, outputPath2);
   } else {
-    XPLMDebugString("TimedProccessing - Unable to convert path\n");
+    XPLMDebugString("Unable to convert path\n");
   }
 #endif
   info->open_outfile( gOutputPath );

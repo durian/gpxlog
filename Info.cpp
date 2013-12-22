@@ -30,7 +30,6 @@ std::string trim(const std::string &t, const std::string &ws) {
 Info::Info() {
   status = 1;
   os     = NULL; // output stream
-  oo     = false; // output is open
 
   start_immediately = 0;
   delta_hdg    =      4.0;
