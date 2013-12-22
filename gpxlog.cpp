@@ -260,6 +260,7 @@ PLUGIN_API void XPluginReceiveMessage(
       gpxlog_start();
     }
   }
+  //XPLM_MSG_AIRPORT_LOADED, XPLM_MSG_SCENERY_LOADED ?
 }
 
 
