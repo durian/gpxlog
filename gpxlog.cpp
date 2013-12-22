@@ -130,8 +130,8 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc) {
   XPLMDebugString( "Starting gpxlog.\n" );
   
   XPLMGetSystemPath(filebase); // Locate the X-System directory
-  XPLMDebugString( filebase );
-  XPLMDebugString( "\n" );
+  //XPLMDebugString( filebase );
+  //XPLMDebugString( "\n" );
 
   std::string sep = std::string(XPLMGetDirectorySeparator());
 
@@ -143,18 +143,14 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc) {
   strcat( gOutputPath, "gpxlog.ini" );
 
   std::string prefsfile = std::string(filebase) + "Resources" + sep + "plugins" + sep + "gpxlog.ini";
-  XPLMDebugString( gOutputPath );
-  XPLMDebugString( "\n" );
   
 #if APL && __MACH__
   Result = ConvertPath(gOutputPath, outputPath2, sizeof(gOutputPath));
-  XPLMDebugString( outputPath2 );
-  XPLMDebugString( "\n" );
   if (Result == 0) {
     prefsfile = std::string( outputPath2 );
-  }
-  else
+  } else {
     XPLMDebugString("TimedProccessing - Unable to convert path\n");
+  }
 #endif
   XPLMDebugString( prefsfile.c_str() );
   XPLMDebugString( "\n" );
@@ -237,8 +233,6 @@ PLUGIN_API int XPluginEnable(void) {
 }
 
 PLUGIN_API void XPluginDisable(void) {
-  /* Flush the file when we are disabled.  This is convenient; you
-   * can disable the plugin and then look at the output on disk. */
   info->flush_outfile();
 }
 
@@ -250,8 +244,8 @@ PLUGIN_API void XPluginReceiveMessage(
   (void)inFromWho;
   (void)inParam;
 
-  std::string s = "XPluginReceiveMessage "+to_str(inMessage)+"\n";
-  XPLMDebugString( s.c_str() );
+  //std::string s = "XPluginReceiveMessage "+to_str(inMessage)+"\n";
+  //XPLMDebugString( s.c_str() );
 
   if ( inMessage == XPLM_MSG_PLANE_LOADED ) {
     if( gGPXStatus == GPXLOG_ON ) {
@@ -260,13 +254,12 @@ PLUGIN_API void XPluginReceiveMessage(
       gpxlog_start();
     }
   }
-  if (inMessage == XPLM_MSG_PLANE_CRASHED) { //101
+  if (inMessage == XPLM_MSG_PLANE_CRASHED) {
     if( gGPXStatus == GPXLOG_ON ) {
       gpxlog_stop();
       gpxlog_start();
     }
-    }
-  //chngelver, 108
+  }
 }
 
 
@@ -374,7 +367,7 @@ void gpxlog_stop() {
     return;
   }
 
-  XPLMDebugString( "gpxlog_stop() called.\n" );
+  //XPLMDebugString( "gpxlog_stop() called.\n" );
 
   XPLMEnableMenuItem(myMenu, GPXLOG_OFF, 0);
   XPLMEnableMenuItem(myMenu, GPXLOG_ON, 1);
@@ -387,7 +380,6 @@ void gpxlog_stop() {
   if ( (pp.lat < 999) && (pp.lon < 999) ) {
     //dfp = distanceto(pp.lat, pp.lon, cp.lat, cp.lon); //abs?
     dfp = distanceto(pp, cp);
-    // large distance here could mean crash and back at airport...
   }
   if ( cp.psd == 0 ) {
     t += cp.spd;
@@ -410,7 +402,7 @@ void gpxlog_start() {
     return;
   }
 
-  XPLMDebugString( "gpxlog_start() called.\n" );
+  //XPLMDebugString( "gpxlog_start() called.\n" );
 
   XPLMEnableMenuItem(myMenu, GPXLOG_OFF, 1);
   XPLMEnableMenuItem(myMenu, GPXLOG_ON, 0);
@@ -420,27 +412,24 @@ void gpxlog_start() {
   strftime( timeoutstr, 32, "%Y%m%d%H%M%S.gpx", plugin_t );
   strcpy( gOutputPath, filebase );
   strcat( gOutputPath, timeoutstr );
-  XPLMDebugString( gOutputPath  );
-  XPLMDebugString( "\n" );
+  //XPLMDebugString( gOutputPath  );
+  //XPLMDebugString( "\n" );
 
 #if APL && __MACH__
   Result = ConvertPath(gOutputPath, outputPath2, sizeof(gOutputPath));
-  XPLMDebugString( "in APL\n"  );
-  if (Result == 0)
+  if ( Result == 0 ) {
     strcpy(gOutputPath, outputPath2);
-  else
+  } else {
     XPLMDebugString("TimedProccessing - Unable to convert path\n");
+  }
 #endif
-  XPLMDebugString( gOutputPath  );
-  XPLMDebugString( "\n" );
   info->open_outfile( gOutputPath );
   gGPXStatus = GPXLOG_ON; // TODO error checking
 }
 
 #if APL && __MACH__
 #include <Carbon/Carbon.h>
-int ConvertPath(const char * inPath, char * outPath, int outPathMaxLen)
-{
+int ConvertPath(const char * inPath, char * outPath, int outPathMaxLen) {
   CFStringRef inStr = CFStringCreateWithCString(kCFAllocatorDefault, inPath ,kCFStringEncodingMacRoman);
   if (inStr == NULL)
     return -1;
