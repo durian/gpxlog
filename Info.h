@@ -17,7 +17,6 @@ class Info {
  private:
   int                     status;
   std::ofstream          *os;
-  bool                    oo;
 
  public:
   int                     start_immediately;
