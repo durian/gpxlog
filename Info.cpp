@@ -98,17 +98,17 @@ void Info::open_outfile( const std::string& fn ) {
   }
 }
 void Info::write_outfile( const std::string& l ) {
-  if ( os->is_open() ) {
+  if ( os && os->is_open() ) {
     (*os) << l << std::endl;
   }
 }
 void Info::close_outfile() {
-  if ( os->is_open() ) {
+  if ( os && os->is_open() ) {
     os->close();
   }
 }
 void Info::flush_outfile() {
-  if ( os->is_open() ) {
+  if ( os && os->is_open() ) {
     os->flush();
   }
 }
@@ -122,19 +122,20 @@ void Info::write_geopos( const struct geopos& p, const std::string& t, double df
   ostr << "\">" << std::endl;
   ostr << "<time>" << t << "</time>" << std::endl;
   ostr << "<ele>";
-  ostr << std::setiosflags(std::ios::fixed) << std::setprecision(1) << p.alt;
+  ostr << std::setiosflags(std::ios::fixed) << std::setprecision(1) << p.alt; // m
   ostr << "</ele>" << std::endl;
   ostr << "<hdg>";
   ostr << std::setiosflags(std::ios::fixed) << std::setprecision(1) << p.hdg;
   ostr << "</hdg>" << std::endl;
+  ostr << "<gsp>";
+  ostr << std::setiosflags(std::ios::fixed) << std::setprecision(1) << (p.gsp * 3.6); // m/s to km/h
+  ostr << "</gsp>" << std::endl;
   ostr << "<dfp>";
-  ostr << std::setiosflags(std::ios::fixed) << std::setprecision(1) << dfp;
+  ostr << std::setiosflags(std::ios::fixed) << std::setprecision(1) << dfp; // m
   ostr << "</dfp>" << std::endl;
   ostr << "<tsd>";
-  ostr << std::setiosflags(std::ios::fixed) << std::setprecision(1) << tsd;
+  ostr << std::setiosflags(std::ios::fixed) << std::setprecision(1) << tsd; // m
   ostr << "</tsd>" << std::endl;
-  ostr << "</trkpt>" << std::endl;
-  if ( os->is_open() ) {
-    (*os) << ostr.str();
-  }
+  ostr << "</trkpt>";// << std::endl;
+  write_outfile( ostr.str() );
 }

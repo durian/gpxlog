@@ -58,7 +58,7 @@ static double distanceto(geopos& p0, geopos& p1) {
 #if APL && __MACH__
 int ConvertPath(const char * inPath, char * outPath, int outPathMaxLen);
 char outputPath2[255];
-int Result = 0;
+int  Result = 0;
 #endif
 
 /* X-Plane Dataref:  sim/time/zulu_time_sec */
@@ -91,9 +91,8 @@ XPLMDataRef gSimPaused;
 /* X-Plane Dataref: sim/time/sim_speed */
 XPLMDataRef gSimSpeed;
 
-Info* info = new Info(); // config settings, TODO: read from file. Globals here
+Info* info = new Info(); // config settings, TODO: read from file. Globals here, better name, ...
 
-FILE *gOutputFile; // Global gpx file 
 char gOutputPath[255]; // Global System path to gpx file 
 enum gpxlog_status gGPXStatus; // Status GPXLOG_OFF, GPXLOG_ON 
 time_t t;            // Time
@@ -214,7 +213,6 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc) {
 		      1);
 
   // Init (read config file with params?)
-  gOutputFile = NULL;
   if ( info->start_immediately == 0 ) {
     gGPXStatus  = GPXLOG_OFF; // start OFF
     XPLMEnableMenuItem(myMenu, GPXLOG_OFF, 0);
@@ -241,9 +239,7 @@ PLUGIN_API int XPluginEnable(void) {
 PLUGIN_API void XPluginDisable(void) {
   /* Flush the file when we are disabled.  This is convenient; you
    * can disable the plugin and then look at the output on disk. */
-  if ( gOutputFile ) {
-    fflush(gOutputFile);
-  }
+  info->flush_outfile();
 }
 
 PLUGIN_API void XPluginReceiveMessage(
@@ -309,15 +305,7 @@ float MyFlightLoopCallback( float inElapsedSinceLastCall,
   (void)inRefcon;
 
   if( gGPXStatus == GPXLOG_ON ) {
-    /*
-    double lat = XPLMGetDataf(gPlaneLat);
-    double lon = XPLMGetDataf(gPlaneLon);
-    double alt = XPLMGetDataf(gPlaneAlt); // is already meters?
-    double hdg = XPLMGetDataf(gPlaneHeading);
-    double gsp = XPLMGetDataf(gPlaneGSP);
-    int    psd = XPLMGetDatai(gSimPaused);
-    int    spd = XPLMGetDatai(gSimSpeed);
-    */
+
     struct geopos cp; //current pos, pp, previous pos
     get_geopos(cp);
 
@@ -344,7 +332,7 @@ float MyFlightLoopCallback( float inElapsedSinceLastCall,
 	}
 	//dfp = distanceto(pp.lat, pp.lon, cp.lat, cp.lon);
 	dfp = distanceto(pp, cp);
-	if ( dfp > info->newtrack_dfp ) {
+	if ( dfp > info->newtrack_dfp ) { // hmm...is this good?
 	  do_log = 1;
 	  gpxlog_stop();
 	  gpxlog_start();
@@ -367,27 +355,11 @@ float MyFlightLoopCallback( float inElapsedSinceLastCall,
 	strftime(timeoutstr, 32, "%Y-%m-%dT%H:%M:%SZ", plugin_t);
 	t_dist += dfp;
 
-	// maybe a format option (WordTraffic, GPX, etc)
-	/*
-	info->write_outfile( "<trkpt lat=\""+to_str2(cp.lat,5)+"\" lon=\""+to_str2(cp.lon,5)+"\">" );
-	info->write_outfile( "<time>"+std::string(timeoutstr)+"</time>" );
-	info->write_outfile( "<ele>"+to_str2(cp.alt, 1)+"</ele>" );
-	info->write_outfile( "<hdg>"+to_str2(cp.hdg, 1)+"</hdg>" );
-	info->write_outfile( "<dfp>"+to_str2(dfp, 1)+"</dfp>" );
-	info->write_outfile( "<tsd>"+to_str2(t_dist, 1)+"</tsd>" );
-	info->write_outfile( "</trkpt>" );
-	*/
+	// maybe a format option (WorldTraffic, GPX, etc)
 	info->write_geopos( cp, std::string(timeoutstr), dfp, t_dist ); 
 	info->flush_outfile(); //maybe a config item?
 
 	pp = cp;
-	/*
-	prev_lat = lat;
-	prev_lon = lon;
-	prev_alt = alt;
-	prev_hdg = hdg;
-	prev_gsp = gsp;
-	*/
       }
     }
   }
@@ -422,22 +394,15 @@ void gpxlog_stop() {
     plugin_t = gmtime(&t);
     t_dist += dfp;
     strftime(timeoutstr, 32, "%Y-%m-%dT%H:%M:%SZ", plugin_t);
-    info->write_outfile( "<trkpt lat=\""+to_str2(cp.lat,5)+"\" lon=\""+to_str2(cp.lon,5)+"\">" );
-    info->write_outfile( "<time>"+std::string(timeoutstr)+"</time>" );
-    info->write_outfile( "<ele>"+to_str2(cp.alt, 1)+"</ele>" );
-    info->write_outfile( "<hdg>"+to_str2(cp.hdg, 1)+"</hdg>" );
-    info->write_outfile( "<dfp>"+to_str2(dfp, 1)+"</dfp>" );
-    info->write_outfile( "<tsd>"+to_str2(t_dist, 1)+"</tsd>" );
-    info->write_outfile( "</trkpt>" );
+    info->write_geopos( cp, std::string(timeoutstr), dfp, t_dist ); 
   }
   info->write_outfile( "</trkseg></trk></gpx>" );
   info->close_outfile();
 
-  gOutputFile = NULL;
   gGPXStatus = GPXLOG_OFF;
 
-  pp = np;
-  t_dist   =    0.0;
+  pp     = np;
+  t_dist = 0.0;
 }
 
 void gpxlog_start() {
