@@ -35,7 +35,6 @@ std::string to_str(long i) {
 std::string to_str2(double i, int p) {
   std::ostringstream ostr;
   ostr << std::setiosflags(std::ios::fixed) << std::setprecision(p) << i;
-  //ostr << i;
   return ostr.str();
 }
 
