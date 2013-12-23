@@ -45,6 +45,7 @@ class Info {
   void close_outfile();
   void flush_outfile();
   void write_geopos( const struct geopos&, const std::string&, double, double );
+  void close_track();
 };
 
 #endif

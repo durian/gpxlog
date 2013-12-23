@@ -109,7 +109,13 @@ void Info::read_prefs( const std::string& filename ) {
 void Info::open_outfile( const std::string& fn ) {
   os = new std::ofstream( fn.c_str(), std::ios::out );
 
-  if ( (format == 1) || (format == 2) ) {
+  if ( format == 1 ) {
+    write_outfile("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>");
+    write_outfile( "<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" xmlns:gpxx=\"http://www.garmin.com/xmlschemas/GpxExtensions/v3\" xmlns:gpxtpx=\"http://www.garmin.com/xmlschemas/TrackPointExtension/v1\" creator=\"GPXLog for XPlane\" version=\"1.1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd\">");
+    write_outfile("<trk>");
+    write_outfile("<trkseg>");
+  }
+  if ( format == 2 ) {
     // write XML header
     write_outfile("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>");
     write_outfile("<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" creator=\"GPXLog for XPlane\" version=\"1.1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd\">");
@@ -166,3 +172,9 @@ void Info::write_geopos( const struct geopos& p, const std::string& t, double df
   }
     write_outfile( ostr.str() );
   }
+
+void Info::close_track() {
+  if ( (format == 1) || (format == 2) ) {
+    write_outfile( "</trkseg></trk></gpx>" );
+  }
+}

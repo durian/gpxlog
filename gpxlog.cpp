@@ -376,7 +376,7 @@ void gpxlog_stop() {
     strftime(timeoutstr, 32, "%Y-%m-%dT%H:%M:%SZ", plugin_t);
     info->write_geopos( cp, std::string(timeoutstr), dfp, t_dist ); 
   }
-  info->write_outfile( "</trkseg></trk></gpx>" );
+  info->close_track();
   info->close_outfile();
 
   gGPXStatus = GPXLOG_OFF;
