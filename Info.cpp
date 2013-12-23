@@ -26,6 +26,25 @@ std::string trim(const std::string &t, const std::string &ws) {
   return res;
 }
 
+std::string to_str(long i) {
+  std::ostringstream ostr;
+  ostr << i;
+  return ostr.str();
+}
+
+std::string to_str2(double i, int p) {
+  std::ostringstream ostr;
+  ostr << std::setiosflags(std::ios::fixed) << std::setprecision(p) << i;
+  //ostr << i;
+  return ostr.str();
+}
+
+int parse_int(const std::string& s) { 
+  int n;
+  std::istringstream(s) >> n;
+  return n;
+}
+
 // Default values if no config file found.
 Info::Info() {
   status = 1;
@@ -36,7 +55,7 @@ Info::Info() {
   delta_dfp    =   2000.0;
   newtrack_dfp =   5000.0; 
   delta_alt    =    200.0;
-  format       =      1;
+  format       =      1; //1=extended, non-standard, 2=standard GPX
 }
 
 Info::~Info() {
@@ -77,6 +96,8 @@ void Info::read_prefs( const std::string& filename ) {
 	  delta_alt = strtod( rhs.c_str(), NULL );
 	} else if ( lhs == "newtrack_dfp" ) {
 	  newtrack_dfp = strtod( rhs.c_str(), NULL );
+	} else if ( lhs == "format" ) {
+	  format = parse_int( rhs.c_str() );
 	} 
       }
     }
@@ -88,7 +109,7 @@ void Info::read_prefs( const std::string& filename ) {
 void Info::open_outfile( const std::string& fn ) {
   os = new std::ofstream( fn.c_str(), std::ios::out );
 
-  if ( format == 1 ) {
+  if ( (format == 1) || (format == 2) ) {
     // write XML header
     write_outfile("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\" ?>");
     write_outfile("<gpx xmlns=\"http://www.topografix.com/GPX/1/1\" creator=\"GPXLog for XPlane\" version=\"1.1\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd\">");
@@ -114,27 +135,34 @@ void Info::flush_outfile() {
 
 void Info::write_geopos( const struct geopos& p, const std::string& t, double dfp, double tsd ) {
   std::ostringstream ostr;
-  ostr << "<trkpt lat=\"";
-  ostr << std::setiosflags(std::ios::fixed) << std::setprecision(5) << p.lat;
-  ostr << "\" lon=\"";
-  ostr << std::setiosflags(std::ios::fixed) << std::setprecision(5) << p.lon;
-  ostr << "\">" << std::endl;
-  ostr << "<time>" << t << "</time>" << std::endl;
-  ostr << "<ele>";
-  ostr << std::setiosflags(std::ios::fixed) << std::setprecision(1) << p.alt; // m
-  ostr << "</ele>" << std::endl;
-  ostr << "<hdg>";
-  ostr << std::setiosflags(std::ios::fixed) << std::setprecision(1) << p.hdg;
-  ostr << "</hdg>" << std::endl;
-  ostr << "<gsp>";
-  ostr << std::setiosflags(std::ios::fixed) << std::setprecision(1) << (p.gsp * 3.6); // m/s to km/h
-  ostr << "</gsp>" << std::endl;
-  ostr << "<dfp>";
-  ostr << std::setiosflags(std::ios::fixed) << std::setprecision(1) << dfp; // m
-  ostr << "</dfp>" << std::endl;
-  ostr << "<tsd>";
-  ostr << std::setiosflags(std::ios::fixed) << std::setprecision(1) << tsd; // m
-  ostr << "</tsd>" << std::endl;
-  ostr << "</trkpt>";// << std::endl;
-  write_outfile( ostr.str() );
-}
+
+  if ( (format == 1) || (format == 2) ) {
+    ostr << "<trkpt lat=\"";
+    ostr << std::setiosflags(std::ios::fixed) << std::setprecision(5) << p.lat;
+    ostr << "\" lon=\"";
+    ostr << std::setiosflags(std::ios::fixed) << std::setprecision(5) << p.lon;
+    ostr << "\">" << std::endl;
+    ostr << "<time>" << t << "</time>" << std::endl;
+    ostr << "<ele>";
+    ostr << std::setiosflags(std::ios::fixed) << std::setprecision(1) << p.alt; // m
+    ostr << "</ele>" << std::endl;
+  }
+  if ( format == 1 ) {
+    ostr << "<hdg>";
+    ostr << std::setiosflags(std::ios::fixed) << std::setprecision(1) << p.hdg;
+    ostr << "</hdg>" << std::endl;
+    ostr << "<gsp>";
+    ostr << std::setiosflags(std::ios::fixed) << std::setprecision(1) << (p.gsp * 3.6); // m/s to km/h
+    ostr << "</gsp>" << std::endl;
+    ostr << "<dfp>";
+    ostr << std::setiosflags(std::ios::fixed) << std::setprecision(1) << dfp; // m
+    ostr << "</dfp>" << std::endl;
+    ostr << "<tsd>";
+    ostr << std::setiosflags(std::ios::fixed) << std::setprecision(1) << tsd; // m
+    ostr << "</tsd>" << std::endl;
+  }
+  if ( (format == 1) || (format == 2) ) {
+    ostr << "</trkpt>";// << std::endl;
+  }
+    write_outfile( ostr.str() );
+  }

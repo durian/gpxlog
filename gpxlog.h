@@ -46,8 +46,6 @@ struct geopos {
 };
 void get_geopos(geopos&);
 
-std::string to_str(long);
-std::string to_str2(long, int);
 void gpxlog_stop(void);
 void gpxlog_start(void);
 

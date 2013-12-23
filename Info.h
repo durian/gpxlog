@@ -12,6 +12,8 @@
 // ----------------------------------------------------------------------------
 
 std::string trim(const std::string&, const std::string&);
+std::string to_str(long);
+std::string to_str2(long, int);
 
 class Info {
  private:

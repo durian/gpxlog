@@ -31,19 +31,6 @@
 #include "gpxlog.h"
 #include "Info.h"
 
-std::string to_str(long i) {
-  std::ostringstream ostr;
-  ostr << i;
-  return ostr.str();
-}
-
-std::string to_str2(double i, int p) {
-  std::ostringstream ostr;
-  ostr << std::setiosflags(std::ios::fixed) << std::setprecision(p) << i;
-  //ostr << i;
-  return ostr.str();
-}
-
 // distance between points
 static double distanceto(double lat0, double lon0, double lat1, double lon1) {
   double slat = sin((lat1-lat0) * (double)(M_PI/360));
