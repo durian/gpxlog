@@ -49,7 +49,7 @@ Info::Info() {
   status = 1;
   os     = NULL; // output stream
 
-  start_immediately = 0;
+  start_immediately = 1;
   delta_hdg    =      4.0;
   delta_dfp    =   2000.0;
   newtrack_dfp =   5000.0; 
@@ -83,7 +83,7 @@ void Info::read_prefs( const std::string& filename ) {
       std::string rhs = trim(a_line.substr( pos+1 ), " \t\r\n");
       if ( (lhs != "") && (rhs != "") ) {
 	std::string tmp = lhs +":"+rhs+"\n";
-	if ( lhs == "start_immediately" ) {
+	if ( lhs == "start_immediately" ) { // or auto_start
 	  if ( rhs == "1" ) {
 	    start_immediately = 1;
 	  }

@@ -196,16 +196,20 @@ PLUGIN_API int XPluginStart(char *outName, char *outSig, char *outDesc) {
 		      1);
 
   // Init (read config file with params?)
-  if ( info->start_immediately == 0 ) {
+  //if ( info->start_immediately == 0 ) {
     gGPXStatus  = GPXLOG_OFF; // start OFF
     XPLMEnableMenuItem(myMenu, GPXLOG_OFF, 0);
     XPLMEnableMenuItem(myMenu, GPXLOG_ON, 1);
-  } else {
-    gGPXStatus  = GPXLOG_ON; // start ON
-    XPLMEnableMenuItem(myMenu, GPXLOG_OFF, 1);
-    XPLMEnableMenuItem(myMenu, GPXLOG_ON, 0);
-  }
+    //} else {
+    //gpxlog_start();
+    //gGPXStatus  = GPXLOG_ON; // start ON
+    //XPLMEnableMenuItem(myMenu, GPXLOG_OFF, 1);
+    //XPLMEnableMenuItem(myMenu, GPXLOG_ON, 0);
+    //}
   XPLMDebugString( "Initialised gpxlog.\n" );
+  if ( info->start_immediately == 1 ) {
+    XPLMDebugString( "Will auto start gpxlog.\n" );
+  }
 
   return 1;
 }
@@ -235,7 +239,10 @@ PLUGIN_API void XPluginReceiveMessage(
   //XPLMDebugString( s.c_str() );
 
   if ( inMessage == XPLM_MSG_PLANE_LOADED ) {
-    if( gGPXStatus == GPXLOG_ON ) {
+    if ( info->start_immediately == 1 ) {
+      gpxlog_start();
+    } 
+    if ( gGPXStatus == GPXLOG_ON ) {
       // start a new track when changing plane
       gpxlog_stop();
       gpxlog_start();
